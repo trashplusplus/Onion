@@ -111,6 +111,7 @@ void theme_renderList(SDL_Surface *screen, List *list)
                 offset_x += icon->w + 17;
             }
         }
+        SDL_Color description_color = theme()->grid.color;
 
         if (item->item_type == TOGGLE) {
             SDL_Surface *toggle = show_disabled ? (item->value == 1 ? hidden_toggle_on : hidden_toggle_off) : (resource_getSurface(item->value == 1 ? TOGGLE_ON : TOGGLE_OFF));
@@ -145,14 +146,20 @@ void theme_renderList(SDL_Surface *screen, List *list)
                 item_center_y - value_size.h / 2};
             SDL_BlitSurface(value_label, &value_size, screen, &value_pos);
         }
+        else if (item->item_type == PLAYACTIVITY) {
+            label_end = 640 - 80;
+            label_y = 30;
 
+            if (list->active_pos == i)
+                description_color = theme()->title.color;
+        }
         theme_renderListLabel(screen, item->label, theme()->list.color,
                               offset_x, item_bg_rect.y + label_y,
                               list->active_pos == i, label_end, show_disabled);
 
         if (!list_small && strlen(item->description)) {
             theme_renderListLabel(
-                screen, item->description, theme()->grid.color, offset_x,
+                screen, item->description, description_color, offset_x,
                 item_bg_rect.y + 62, list->active_pos == i, label_end, show_disabled);
         }
     }
