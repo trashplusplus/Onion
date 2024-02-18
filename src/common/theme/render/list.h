@@ -102,6 +102,30 @@ void theme_renderList(SDL_Surface *screen, List *list)
         static int multivalue_width = 226;
         int label_end = 640;
         int offset_x = 20;
+        SDL_Color description_color = theme()->grid.color;
+
+        if (item->item_type == PLAYACTIVITY) {
+            static int digit_width = 0;
+            if (digit_width == 0) {
+                char *tmp_str = "7"; // our font is monospace, but others?
+                SDL_Surface *sdl_tmp = TTF_RenderUTF8_Blended(list_font, tmp_str, theme()->list.color);
+                digit_width = sdl_tmp->w;
+                SDL_FreeSurface(sdl_tmp);
+            }
+            char index_str[STR_MAX];
+            snprintf(index_str, STR_MAX, "%d", i + 1);
+            offset_x += 10 + strlen(index_str) * digit_width;
+
+            SDL_Surface *index_label = TTF_RenderUTF8_Blended(list_font, index_str, theme()->list.color);
+            SDL_Rect index_pos = {digit_width, item_bg_rect.y + index_label->h};
+            SDL_BlitSurface(index_label, NULL, screen, &index_pos);
+            SDL_FreeSurface(index_label);
+
+            label_end = RENDER_WIDTH - 80 - strlen(index_str) * digit_width; // less space as number grows
+            label_y = 30; // give the description more space
+            if (list->active_pos == i)
+                description_color = theme()->title.color; // make the selected item's description pop
+        }
 
         if (item->icon_ptr != NULL) {
             SDL_Surface *icon = (SDL_Surface *)item->icon_ptr;
@@ -111,7 +135,6 @@ void theme_renderList(SDL_Surface *screen, List *list)
                 offset_x += icon->w + 17;
             }
         }
-        SDL_Color description_color = theme()->grid.color;
 
         if (item->item_type == TOGGLE) {
             SDL_Surface *toggle = show_disabled ? (item->value == 1 ? hidden_toggle_on : hidden_toggle_off) : (resource_getSurface(item->value == 1 ? TOGGLE_ON : TOGGLE_OFF));
@@ -146,13 +169,7 @@ void theme_renderList(SDL_Surface *screen, List *list)
                 item_center_y - value_size.h / 2};
             SDL_BlitSurface(value_label, &value_size, screen, &value_pos);
         }
-        else if (item->item_type == PLAYACTIVITY) {
-            label_end = 640 - 80;
-            label_y = 30;
 
-            if (list->active_pos == i)
-                description_color = theme()->title.color;
-        }
         theme_renderListLabel(screen, item->label, theme()->list.color,
                               offset_x, item_bg_rect.y + label_y,
                               list->active_pos == i, label_end, show_disabled);
